@@ -157,16 +157,16 @@ if any(found_saved_Ts==0):
     #     GPU_2_use = Assign_GPU()
     #     os.environ["CUDA_VISIBLE_DEVICES"] = "%d" % (GPU_2_use[0])  # Limit to 1 GPU when using an interactive session
     if CLASSIFIER_2_USE == 'ELU':
-        import Mandelbaum.elu_network_stl10 as Amit_code
-        import reproduce_amit_scores
-        model = Amit_code.STL10_Model(amit_model=MODEL_VERSION)
+        import IAD.elu_network_stl10 as ELU_code
+        from IAD.reproduce_amit_scores import Calc_IAD_Scores
+        model = ELU_code.STL10_Model(amit_model=MODEL_VERSION)
         resulting_dict = model.Evaluate_Model(transformations_list=remaining_transformations,set='val',amitFeatures='mandelbaum_scores' in METHODS_2_COMPARE)
-        mandelbaum_scores, mandelbaum_correct_predictions = reproduce_amit_scores.Calc_Amit_scores(model,input_folder=IAD_FEATURES_FOLDER)
+        mandelbaum_scores, mandelbaum_correct_predictions = Calc_IAD_Scores(model,input_folder=IAD_FEATURES_FOLDER)
         assert np.all(np.logical_not(mandelbaum_correct_predictions) == resulting_dict['error_indicator']), \
-            'There seems to be a mismatch between Mandelbaum''s loaded data and the data used for other methods'
+            'There seems to be a mismatch between IAD''s loaded data and the data used for other methods'
         resulting_dict['mandelbaum_scores'] = mandelbaum_scores
         model_seed_transformations = [True]
-    else:#Wide_ResNet
+    else:
         import Wide_ResNet.train as Wide_ResNet_code
         if CLASSIFIER_2_USE == 'ResNet18':
             from torchvision.models import resnet18
