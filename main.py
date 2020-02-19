@@ -81,29 +81,6 @@ saved_logits_file_name = 'saved_logits_%s'%(full_model_name)
 saved_logits_file_name = saved_logits_file_name.replace('_ensemble','')
 
 logits_files_2_load,found_saved_Ts = Locate_Saved_logits(s.path.join(SAVED_LOGITS_FOLDER,'saved_logits_files.csv'),saved_logits_file_name,MODEL_VERSION,desired_Ts,USE_ALL_EXISTING_Ts)
-# logits_files_2_load = []
-# with open(os.path.join(SAVED_LOGITS_FOLDER,'saved_logits_files.csv'),'r') as csvfile:
-#     for row in csv.reader(csvfile):
-#         if any([re.search(name+'_(\d)+\.npy',row[0]) for name in ([(saved_logits_file_name+identifier) for identifier in (['']+['_Seed%d'%(i+1) for i in range(4)])] if MODEL_VERSION=='ensemble' else [saved_logits_file_name])]):
-#             saved_Ts = row[1].split(',')
-#             if re.search('_Seed\d_',row[0]) is not None and MODEL_VERSION=='ensemble':
-#                 seed_num = int(re.search('(?<=_Seed)\d',row[0]).group(0))
-#                 saved_Ts = ['model_seed%d_'%(seed_num)+t for t in saved_Ts]
-#             if USE_ALL_EXISTING_Ts is not None:
-#                 Ts_2_add = [T for T in saved_Ts if T not in desired_Ts and
-#                             ((any([re.match(p,T) is not None for p in USE_ALL_EXISTING_Ts]) and 'model_seed' not in T))]
-#                 found_saved_Ts = np.concatenate([found_saved_Ts,np.zeros([len(Ts_2_add)]).astype(int)])
-#                 desired_Ts += Ts_2_add
-#             if re.search('_Seed\d_',row[0]) is not None and MODEL_VERSION=='ensemble':
-#                 existing_desired_Ts = [('model_seed%d_'%(seed_num)+T) in saved_Ts for T in desired_Ts]
-#             else:
-#                 existing_desired_Ts = [T in saved_Ts for T in desired_Ts]
-#             if any(existing_desired_Ts):
-#                 logits_files_2_load.append(row[0])
-#                 found_saved_Ts[np.argwhere(existing_desired_Ts)] = len(logits_files_2_load)
-#                 print('Using saved logits from file %s'%(logits_files_2_load[-1]))
-#                 if all(found_saved_Ts>0) and USE_ALL_EXISTING_Ts is None:
-#                     break
 
 print('Using %d different transformations'%(len(desired_Ts)))
 TRANSFORMATIONS_LIST = [T.split('+') for T in desired_Ts]
@@ -113,41 +90,6 @@ if 'perT_MSR' in METHODS_2_COMPARE:
 if CLASSIFIER_2_USE != 'ELU':
     METHODS_2_COMPARE = [m for m in METHODS_2_COMPARE if m != 'mandelbaum_scores']
 
-# classifier_output_dict = None
-# if len(logits_files_2_load)>0:
-#     loaded_desired_Ts = np.zeros([len(desired_Ts)]).astype(np.bool)
-#     unique_files_2_load = sorted([i for i in list(set(list(found_saved_Ts))) if i>0],key=lambda x:logits_files_2_load[x-1]) #Removing the invalid 0 index and sorting as a hack to prevent loading model_seed files first
-#     for file_num in unique_files_2_load:
-#         # if file_num==0:
-#         #     continue
-#         filename_2_load = logits_files_2_load[file_num-1]
-#         loaded_dict = np.load(os.path.join(SAVED_LOGITS_FOLDER,filename_2_load),allow_pickle=True).item()
-#         saved_Ts = ['+'.join(T) for T in loaded_dict['Transformations']]
-#         assert len(saved_Ts)==((loaded_dict['logits'].shape[1]//num_classes)-1),'Saved logits vector length does not match num of saved transformations'
-#         if re.search('_Seed\d_',filename_2_load) is not None and MODEL_VERSION=='ensemble':
-#             seed_num = int(re.search('(?<=_Seed)\d',filename_2_load).group(0))
-#             saved_Ts = ['model_seed%d_'%(seed_num)+t for t in saved_Ts]
-#         def transformations_match(saved_T,desired_T):
-#             # if 'Wide_ResNet_Seed' in full_model_name:
-#             #     return saved_T==('model_seed%d_'%(seed_num)+desired_T)
-#             # else:
-#             return saved_T==desired_T
-#         corresponding_T_indexes = [(desired_T_index,saved_T_index) for saved_T_index,T in enumerate(saved_Ts) for desired_T_index,desired_T in enumerate(desired_Ts) if transformations_match(T,desired_T)]
-#         if classifier_output_dict is None:
-#             classifier_output_dict = copy.deepcopy(loaded_dict)
-#             classifier_output_dict['logits'] = np.zeros(shape=[loaded_dict['logits'].shape[0],(1+len(desired_Ts))*num_classes])
-#             if CURVE_TYPE!='param_search':#I allow loading the orignal image logits as 0 for the Seed!=0 case only when used for param_search
-#                 assert not any(['model_seed' in t for t in saved_Ts]),'Should not use the file containing logits computed by differently seeded models as source for original logits, as those are set to zero there. Solve this if it happens'
-#             classifier_output_dict['logits'][:,:num_classes] = loaded_dict['logits'][:,:num_classes]
-#         # TRANSFORMATIONS_LIST = [classifier_output_dict['Transformations'][i] for i in corresponding_T_indexes]#I"m not sure why I need this line - It seems like I'm recreating the same list.
-#         # classifier_output_dict['logits'] = np.concatenate([classifier_output_dict['logits'][:,num_classes*(i+1):num_classes*(i+2)] for i in [-1]+corresponding_T_indexes],1)
-#         for desired_T_index,saved_T_index in corresponding_T_indexes:
-#             if loaded_desired_Ts[desired_T_index]:
-#                 continue
-#             loaded_desired_Ts[desired_T_index] = True
-#             classifier_output_dict['logits'][:,(desired_T_index+1)*num_classes:(desired_T_index+2)*num_classes] = loaded_dict['logits'][:,(saved_T_index+1)*num_classes:(saved_T_index+2)*num_classes]
-#         if np.all(loaded_desired_Ts):
-#             break
 classifier_output_dict = Load_Saved_Logits(logits_files_2_load,found_saved_Ts,desired_Ts,num_classes,models_ensemble_mode=MODEL_VERSION=='ensemble')
 
 if any(found_saved_Ts==0):
@@ -163,6 +105,7 @@ if any(found_saved_Ts==0):
         resulting_dict['mandelbaum_scores'] = mandelbaum_scores
         model_seed_transformations = [True]
     else:
+        from dataloaders_and_inference import Return_Dataloaders,model_inference
         import Wide_ResNet.train as Wide_ResNet_code
         if CLASSIFIER_2_USE == 'ResNet18':
             from torchvision.models import resnet18
@@ -183,7 +126,7 @@ if any(found_saved_Ts==0):
             model = torch.nn.DataParallel(getattr(CIFAR_model,used_dataset)(n_channel=128,pretrained=True)).cuda()
         else:
             model,_ = Wide_ResNet_code.Load_Model(model='wideresnet', dataset='stl10', test_id='stl10_wideresnet_B32_'+(MODEL_VERSION if MODEL_VERSION in CUTOUT_MODELS else 'Seed0'))
-        data_loader = Wide_ResNet_code.Return_Dataloaders(used_dataset,batch_size=int(np.maximum(1,np.floor(32/(1+len(remaining_transformations))))),
+        data_loader = Return_Dataloaders(used_dataset,batch_size=int(np.maximum(1,np.floor(32/(1+len(remaining_transformations))))),
                                                      normalize_data=False,download=False)
         data_loader = data_loader[1]
         model_seed_transformations = ['model_seed' in '+'.join(t) for t in remaining_transformations]
