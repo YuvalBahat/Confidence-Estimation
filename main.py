@@ -152,10 +152,6 @@ classifier_output_dict = Load_Saved_Logits(logits_files_2_load,found_saved_Ts,de
 
 if any(found_saved_Ts==0):
     remaining_transformations = [T for i,T in enumerate([T.split('+') for T in desired_Ts]) if not found_saved_Ts[i]]
-    # assert not os.path.isfile(os.path.join(SAVED_LOGITS_FOLDER, saved_logits_file_name)),'These logits were already extracted...'
-    # if '/ybahat/PycharmProjects/' in os.getcwd():
-    #     GPU_2_use = Assign_GPU()
-    #     os.environ["CUDA_VISIBLE_DEVICES"] = "%d" % (GPU_2_use[0])  # Limit to 1 GPU when using an interactive session
     if CLASSIFIER_2_USE == 'ELU':
         import IAD.elu_network_stl10 as ELU_code
         from IAD.reproduce_amit_scores import Calc_IAD_Scores
