@@ -1,2 +1,2 @@
 # Confidence-Estimation
-Code for the paper Classification Confidence Estimation with Test-Time Data-Augmentation
+Code for the submitted manuscript titled "Classification Confidence Estimation with Test-Time Data-Augmentation"
