@@ -22,7 +22,7 @@ CIFAR10_PATH = '~/data/Databases/cifar10/'
 SVHN_PATH = '~/data/Databases/SVHN/'
 CIFAR100_PATH = '~/data/Databases/CIFAR100/'
 IMAGENET_PATH = '~/data/Databases/ImageNet/'
-SAVED_LOGITS_FOLDER = '/home/ybahat/data/ErrorDetection/Saved_logits'
+SAVED_LOGITS_FOLDER = '/home/XXX/data/ErrorDetection/Saved_logits'
 SAVED_DRAWN_RANDOMS_FOLDER = 'datasets_partition/'
 SAVED_LOGITS_CSV_FILENAME = 'saved_logits_files'
 
