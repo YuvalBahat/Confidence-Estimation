@@ -4,7 +4,7 @@ import os
 from math import factorial
 import copy
 
-SAVED_DRAWN_RANDOMS_FOLDER = '/home/ybahat/data/ErrorDetection/Saved_Drawn_Randoms'
+SAVED_DRAWN_RANDOMS_FOLDER = 'datasets_partition/'
 RELIABILITY_SCORE_METHODS = ['Transformations_MSR','original_MSR','Transformations_MSR_BS','perT_MSR','.*_MSR']
 UNCERTAINY_SCORE_METHODS = ['MLP_detection']
 

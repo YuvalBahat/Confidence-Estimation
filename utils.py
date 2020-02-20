@@ -23,8 +23,8 @@ SVHN_PATH = '~/data/Databases/SVHN/'
 CIFAR100_PATH = '~/data/Databases/CIFAR100/'
 IMAGENET_PATH = '~/data/Databases/ImageNet/'
 SAVED_LOGITS_FOLDER = '/home/ybahat/data/ErrorDetection/Saved_logits'
-SAVED_DRAWN_RANDOMS_FOLDER = '/home/ybahat/data/ErrorDetection/Saved_Drawn_Randoms'
-SAVED_LOGITS_CSV_FILENAME = 'saved_logits_table'
+SAVED_DRAWN_RANDOMS_FOLDER = 'datasets_partition/'
+SAVED_LOGITS_CSV_FILENAME = 'saved_logits_files'
 
 STL10_MODEL_VERSIONS = ['Seed0_no_augm','Seed0_flipOnly','Seed0_flipOnlyHalfData','ensemble','Seed0_untrained','Seed0_no_flip']+['Seed%d'%(i+1) for i in range(4)]
 
