@@ -5,7 +5,7 @@ from math import factorial
 import copy
 
 SAVED_DRAWN_RANDOMS_FOLDER = '/home/ybahat/data/ErrorDetection/Saved_Drawn_Randoms'
-RELIABILITY_SCORE_METHODS = ['T_ensemble_MSR','original_MSR','T_MSR_bootstraping','perT_MSR','.*_MSR']
+RELIABILITY_SCORE_METHODS = ['Transformations_MSR','original_MSR','Transformations_MSR_BS','perT_MSR','.*_MSR']
 UNCERTAINY_SCORE_METHODS = ['MLP_detection']
 
 
@@ -97,7 +97,7 @@ def Process_logits(outputs_dict,num_classes,effective_posteriors,desired_metrics
                                                                            np.argpartition(posteriros_of_desired_T[:,:], kth=-5,axis=-1)[:, -5:].reshape([-1, 5])], -1)
                 else:
                     dict_2_return[metric] = np.max(posteriros_of_desired_T,-1)
-            elif metric == 'T_ensemble_MSR':
+            elif metric == 'Transformations_MSR':
                 # MSR of averaged posteriors:
                 posteriors_mean = np.mean(posteriors, 1)
                 if top5:
@@ -116,7 +116,7 @@ def Process_logits(outputs_dict,num_classes,effective_posteriors,desired_metrics
                 else:
                     # dict_2_return[metric] = np.max(posteriors_mean, -1)
                     dict_2_return[metric] = posteriors_mean[np.arange(posteriors.shape[0]),np.argmax(effective_posteriors,-1)]
-            elif metric=='T_MSR_bootstraping':
+            elif metric=='Transformations_MSR_BS':
                 resampled_indexes = Draw_Bootstraping_Sampling_Pattern(num_bootstraping_resamples,posteriors.shape[1])
                 if top5:
                     bootstraped_T_MSR = posteriors[np.arange(posteriors.shape[0]).reshape([-1, 1, 1,1]),np.expand_dims(np.expand_dims(resampled_indexes,0),-1),

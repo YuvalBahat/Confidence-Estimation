@@ -4,8 +4,9 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import os
 
-CHECKPOINTS_PATH = '~/data/ErrorDetection/Checkpoints/'
+CHECKPOINTS_PATH = 'STL10/'
 
 class BasicBlock(nn.Module):
     def __init__(self, in_planes, out_planes, stride, dropRate=0.0):
@@ -99,7 +100,7 @@ def Load_Model(model,dataset,test_id,lr_4_training=None):
         cnn = WideResNet(depth=28, num_classes=num_classes, widen_factor=10,
                          dropRate=0.3)
 
-    cnn = nn.DataParallel(cnn).cuda()
+    cnn = nn.DataParallel(cnn,device_ids=[0]).cuda()
     if lr_4_training is not None:
         cnn_optimizer = torch.optim.SGD(cnn.parameters(), lr=lr_4_training,momentum=0.9, nesterov=True, weight_decay=5e-4)
     model_path = CHECKPOINTS_PATH + test_id + '.pt'
@@ -113,7 +114,6 @@ def Load_Model(model,dataset,test_id,lr_4_training=None):
                 cnn_optimizer.load_state_dict(state_dict['optimizer'])
         else:#Supporting models saved before adding optimizer saving:
             cnn.load_state_dict(state_dict)
-        # cnn = nn.DataParallel(cnn,device_ids=[0]).cuda()
     else:
         latest_epoch = -1
     print('Loading a %s model for %s%s: %s'%(('pretrained ' if pretrained_exists else '')+model,dataset,', at epoch %d'%(latest_epoch) if pretrained_exists else '',model_path))

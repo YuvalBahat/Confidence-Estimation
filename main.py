@@ -2,11 +2,12 @@ from utils import *
 from confidence_estimates import Process_logits,RELIABILITY_SCORE_METHODS,UNCERTAINY_SCORE_METHODS
 from evaluation import *
 
+# Experiment parameters:
 CURVE_TYPE = 'AORC'#'eAURC','AORC','AUPR','AUROC'
 TOP5 = False
-METHODS_2_COMPARE = ['T_ensemble_MSR','original_MSR','T_MSR_bootstraping']
+METHODS_2_COMPARE = ['Transformations_MSR','original_MSR','Transformations_MSR_BS']
 TEMPERATURE = {'default':1.}
-CLASSIFIER_2_USE = 'SVHN'#'WideResNet','ELU','ResNet18','ResNext','AlexNet','SVHN','CIFAR10','CIFAR100'
+CLASSIFIER_2_USE = 'CIFAR10'#'WideResNet','ResNet18','ResNext','AlexNet','SVHN','CIFAR10','CIFAR100'
 HYPER_PARTITION = 'test'#'train','test'
 
 MODEL_VERSION = 'None'#'None','AT','dist','Seed0_no_augm','flipOnly','flipOnlyHalfData','Seed1','Seed2','ensemble','Seed0_untrained','Seed0_no_flip'

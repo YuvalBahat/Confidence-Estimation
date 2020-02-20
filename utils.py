@@ -161,6 +161,7 @@ def Model_Inference(loader,model,dataset,transformer=None,return_outputs_dict=Fa
     already_normalized = any([isinstance(t,transforms.transforms.Normalize) for t in loader.dataset.transforms.transform.transforms])
     assert transformer is None or (not already_normalized),'Should not apply transformer on already normalized images.'
     progress_bar = tqdm(loader)
+    model_device = next(model.parameters()).device
     for images, labels in progress_bar:
         progress_bar.set_description('Testing')
         if dataset=='svhn':
@@ -171,14 +172,14 @@ def Model_Inference(loader,model,dataset,transformer=None,return_outputs_dict=Fa
             images,labels = transformer.TransformImages(images=images,labels=labels)
         if not already_normalized:
             images = (images-np.reshape(images_mean,[1,1,1,3]))/np.reshape(images_STD,[1,1,1,3])
-        images, labels = torch.from_numpy(images.transpose((0,3,1,2))).type(torch.FloatTensor),torch.from_numpy(labels).type(torch.int64)
+        images, labels = torch.from_numpy(images.transpose((0,3,1,2))).type(torch.FloatTensor).to(model_device),torch.from_numpy(labels).type(torch.int64).to(model_device)
         with torch.no_grad():
             pred = model(images)
         if transformer is None:
             cur_logits = 1*pred
         else:
             pred,cur_logits = transformer.Process_Logits(input_logits=pred,reorder_logits=False)
-            labels = transformer.Process_NonLogits(labels)
+            labels = transformer.Process_NonLogits(labels.cpu())
         top_5_predicted = torch.argsort(pred,dim=1,descending=True)[:,:5]
         error_indicator = (top_5_predicted[:,0] != labels.to(top_5_predicted.device)).data.cpu().numpy()
         if return_outputs_dict:
@@ -199,17 +200,18 @@ def Model_Inference(loader,model,dataset,transformer=None,return_outputs_dict=Fa
         return val_acc
 
 def Infer_Logits(classifier_output_dict,desired_Ts,found_saved_Ts,used_classifier,model_version,used_dataset,num_classes,saved_logits_file_name):
+    SAVE_LOGITS_2_FILE = True
     remaining_transformations = [T for i,T in enumerate([T.split('+') for T in desired_Ts]) if not found_saved_Ts[i]]
     from STL10 import WideResNet_model
     if used_classifier == 'ResNet18':
         from torchvision.models import resnet18
-        model = nn.DataParallel(resnet18(pretrained=True)).cuda()
+        model = nn.DataParallel(resnet18(pretrained=True),device_ids=[0]).cuda()
     elif used_classifier=='ResNext':
         from torchvision.models import resnext101_32x8d
-        model = nn.DataParallel(resnext101_32x8d(pretrained=True)).cuda()
+        model = nn.DataParallel(resnext101_32x8d(pretrained=True),device_ids=[0]).cuda()
     elif used_classifier == 'AlexNet':
         from torchvision.models import alexnet
-        model = nn.DataParallel(alexnet(pretrained=True)).cuda()
+        model = nn.DataParallel(alexnet(pretrained=True),device_ids=[0]).cuda()
     elif used_classifier=='SVHN':
         from SVHN import model as SVHN_model
         model = SVHN_model.svhn(n_channel=32,pretrained=True).cuda()
@@ -223,7 +225,8 @@ def Infer_Logits(classifier_output_dict,desired_Ts,found_saved_Ts,used_classifie
     model_seed_transformations = ['model_seed' in '+'.join(t) for t in remaining_transformations]
     assert all(model_seed_transformations) or np.all(np.logical_not(model_seed_transformations)),'Not supporting mixed logits computation'
     predicted_logits_memory_size = len(data_loader.dataset)*(len(remaining_transformations)+1)*num_classes*4
-    assert predicted_logits_memory_size<4e9,'Computed logits memory size (%.2f GB, %d transformations) is about to exceed the 4GB data limit'%(predicted_logits_memory_size/1e9,len(remaining_transformations))
+    if SAVE_LOGITS_2_FILE:
+        assert predicted_logits_memory_size<4e9,'Computed logits memory size (%.2f GB, %d transformations) is about to exceed the 4GB data limit'%(predicted_logits_memory_size/1e9,len(remaining_transformations))
     if model_seed_transformations[0]:
         assert model_version in STL10_MODEL_VERSIONS
         resulting_dict,actual_computed_transformations = [],[]
@@ -251,12 +254,13 @@ def Infer_Logits(classifier_output_dict,desired_Ts,found_saved_Ts,used_classifie
         file_counter += 1
     saved_logits_file_name = saved_logits_file_name%(file_counter)
     resulting_dict['Transformations'] = remaining_transformations
-    np.save(os.path.join(SAVED_LOGITS_FOLDER, saved_logits_file_name), resulting_dict)
-    trans_list_4_saving = ','.join(['+'.join(t) for t in sorted(remaining_transformations,key=lambda t:''.join(t))])
-    if os.path.exists(os.path.join(SAVED_LOGITS_FOLDER, SAVED_LOGITS_CSV_FILENAME+'.csv')):
-        copyfile(os.path.join(SAVED_LOGITS_FOLDER, SAVED_LOGITS_CSV_FILENAME+'.csv'),os.path.join(SAVED_LOGITS_FOLDER, SAVED_LOGITS_CSV_FILENAME+'.bkp'))
-    with open(os.path.join(SAVED_LOGITS_FOLDER, SAVED_LOGITS_CSV_FILENAME+'.csv'), 'a') as csvfile:
-        csv.writer(csvfile).writerow([saved_logits_file_name,trans_list_4_saving])
+    if SAVE_LOGITS_2_FILE:
+        np.save(os.path.join(SAVED_LOGITS_FOLDER, saved_logits_file_name), resulting_dict)
+        trans_list_4_saving = ','.join(['+'.join(t) for t in sorted(remaining_transformations,key=lambda t:''.join(t))])
+        if os.path.exists(os.path.join(SAVED_LOGITS_FOLDER, SAVED_LOGITS_CSV_FILENAME+'.csv')):
+            copyfile(os.path.join(SAVED_LOGITS_FOLDER, SAVED_LOGITS_CSV_FILENAME+'.csv'),os.path.join(SAVED_LOGITS_FOLDER, SAVED_LOGITS_CSV_FILENAME+'.bkp'))
+        with open(os.path.join(SAVED_LOGITS_FOLDER, SAVED_LOGITS_CSV_FILENAME+'.csv'), 'a') as csvfile:
+            csv.writer(csvfile).writerow([saved_logits_file_name,trans_list_4_saving])
     if classifier_output_dict is not None:
         assert model_seed_transformations[0] or np.max(np.abs(resulting_dict['logits'][:,:num_classes]-classifier_output_dict['logits'][:,:num_classes]))<np.percentile(np.abs(resulting_dict['logits']),0.01),'Difference in logits of original images between loaded and computed logits.'
         corresponding_T_indexes = [(desired_T_index,saved_T_index) for saved_T_index,T in enumerate(['+'.join(t) for t in remaining_transformations]) for desired_T_index,desired_T in enumerate(desired_Ts) if T==desired_T]
