@@ -8,3 +8,14 @@ Code for the paper "[Classification Confidence Estimation with Test-Time Data-Au
 
 ### Subsets Partition
 The partitions of the different validation datasets into evaluation and experimental subsets are defined in the npz files inside the datasets_partition folder. This folder contains the randomly drawn bootstrapping resampling indices, to allow reproducing the results in the paper. 
+
+If you find our work useful in your research or publication, please cite it:
+
+```
+@article{bahat2020classification,
+  title={Classification confidence estimation with test-time data-augmentation},
+  author={Bahat, Yuval and Shakhnarovich, Gregory},
+  journal={arXiv preprint arXiv:2006.16705},
+  year={2020}
+}
+```
