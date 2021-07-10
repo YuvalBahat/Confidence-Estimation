@@ -1,5 +1,5 @@
 # Confidence-Estimation
-Code for the submitted manuscript titled "Classification Confidence Estimation with Test-Time Data-Augmentation"
+Code for the paper "[Classification Confidence Estimation with Test-Time Data-Augmentation](https://www.google.com/url?q=https%3A%2F%2Farxiv.org%2Fabs%2F2006.16705&sa=D&sntz=1&usg=AFQjCNHsVS_Un8lNBoUHpe5N49_PnfR9vA)", by [Yuval Bahat](https://sites.google.com/view/yuval-bahat/home) and [Greg Shakhnarovich](https://home.ttic.edu/~gregory/).
 
 ### Usage insturctions:
 1.Update the desired experiment parameters in main.py  
